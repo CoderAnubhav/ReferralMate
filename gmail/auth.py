@@ -1,11 +1,7 @@
 import os
-
 from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-
 from google_auth_oauthlib.flow import InstalledAppFlow
-
-from googleapiclient.discovery import build
+from google.auth.transport.requests import Request
 
 
 class GmailAuth:
@@ -13,46 +9,115 @@ class GmailAuth:
     SCOPES = [
         "https://www.googleapis.com/auth/gmail.modify",
         "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive.readonly"
+        "https://www.googleapis.com/auth/drive",
     ]
 
-    def __init__(self):
+    def __init__(
+        self,
+        credentials_file="credentials.json",
+        token_file="token.json"
+    ):
 
-        self.creds = None
+        self.credentials_file = credentials_file
+        self.token_file = token_file
 
     def authenticate(self):
 
-        if os.path.exists("token.json"):
+        creds = None
 
-            self.creds = Credentials.from_authorized_user_file(
-                "token.json",
+        # --------------------------------------------------
+        # 1. Try to load existing OAuth token
+        # --------------------------------------------------
+
+        if os.path.exists(self.token_file):
+
+            print("Loading existing Google OAuth token...")
+
+            creds = Credentials.from_authorized_user_file(
+                self.token_file,
                 self.SCOPES
             )
 
-        if not self.creds or not self.creds.valid:
+        # --------------------------------------------------
+        # 2. Refresh expired token
+        # --------------------------------------------------
 
-            if self.creds and self.creds.expired and self.creds.refresh_token:
+        if creds and creds.expired and creds.refresh_token:
 
-                self.creds.refresh(Request())
+            print("Google OAuth token expired.")
+            print("Refreshing token...")
 
-            else:
+            try:
 
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    "credentials.json",
-                    self.SCOPES
+                creds.refresh(Request())
+
+                print("Google OAuth token refreshed.")
+
+            except Exception as e:
+
+                print(
+                    "Failed to refresh Google OAuth token:"
                 )
 
-                self.creds = flow.run_local_server(port=0)
+                print(e)
 
-            with open("token.json", "w") as token:
+                creds = None
 
-                token.write(self.creds.to_json())
+        # --------------------------------------------------
+        # 3. If no valid token exists
+        # --------------------------------------------------
 
-        gmail_service=build(
-            "gmail",
-            "v1",
-            credentials=self.creds
+        if not creds or not creds.valid:
+
+            # ----------------------------------------------
+            # GitHub Actions cannot perform browser login
+            # ----------------------------------------------
+
+            if os.getenv("GITHUB_ACTIONS") == "true":
+
+                raise RuntimeError(
+                    "No valid Google OAuth token is available "
+                    "in GitHub Actions. Please update the "
+                    "GOOGLE_TOKEN_JSON GitHub secret with a "
+                    "valid token.json."
+                )
+
+            # ----------------------------------------------
+            # Local development
+            # ----------------------------------------------
+
+            print(
+                "No valid Google OAuth token found."
+            )
+
+            print(
+                "Starting browser-based Google authentication..."
+            )
+
+            flow = InstalledAppFlow.from_client_secrets_file(
+                self.credentials_file,
+                self.SCOPES
+            )
+
+            creds = flow.run_local_server(
+                port=0
+            )
+
+        # --------------------------------------------------
+        # 4. Save token locally
+        # --------------------------------------------------
+
+        with open(
+            self.token_file,
+            "w"
+        ) as token:
+
+            token.write(
+                creds.to_json()
+            )
+
+        print(
+            "Google authentication successful."
         )
-        print("Granted Scopes:", self.creds.scopes)
-        return gmail_service, self.creds
-        
+
+        return creds
