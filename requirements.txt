@@ -1,0 +1,11 @@
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+gspread
+google-genai
+langgraph
+slack_sdk
+beautifulsoup4
+python-dotenv
+datetime
