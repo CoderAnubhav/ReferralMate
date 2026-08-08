@@ -236,7 +236,7 @@ class SlackService:
                     self.send_message(
                         f"*♻️ Reused existing {company} referral "
                         f"message:*\n\n"
-                        f"{existing_referral["referral"]}"
+                        f"{existing_referral['referral']}"
                     )
 
                     return
