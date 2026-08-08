@@ -4,7 +4,17 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: "*/15 * * * *"
+    # 12:00 PM IST
+    - cron: "30 6 * * *"
+
+    # 4:00 PM IST
+    - cron: "30 10 * * *"
+
+    # 6:00 PM IST
+    - cron: "30 12 * * *"
+
+    # 10:00 PM IST
+    - cron: "30 16 * * *"
 
 jobs:
   run:
