@@ -119,9 +119,9 @@ class SlackService:
 
         message += (
             "\nReply with:\n"
-            "`Name | Company`\n\n"
+            "`Company Name,Company_Name`\n\n"
             "Example:\n"
-            "`John Doe | Microsoft`"
+            "`Company John Doe,Microsoft`"
         )
 
         self.client.chat_postMessage(
