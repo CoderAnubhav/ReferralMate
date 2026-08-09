@@ -3,10 +3,28 @@ from gmail.labels import GmailLabels
 from gmail.scanner import GmailScanner
 from services.sheets_service import GoogleSheetsService
 from services.slack_service import SlackService
+import os
+
+from services.drive_service import GoogleDriveService
 
 
 def main():
     gmail_service, creds = GmailAuth().authenticate()
+
+
+    # ---------------------------------------------
+    # Download resume from Google Drive
+    # ---------------------------------------------
+
+    resume_path = "/tmp/resume.txt"
+
+    drive = GoogleDriveService(creds)
+
+    drive.download_file(
+        file_id=os.environ["RESUME_DRIVE_FILE_ID"],
+        destination=resume_path
+    )
+
     sheet = GoogleSheetsService(creds)
 
     label_id = GmailLabels(

@@ -63,6 +63,6 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          RESUME_PATH: resume/resume.txt
+          RESUME_DRIVE_FILE_ID: ${{ secrets.RESUME_DRIVE_FILE_ID }}
         run: |
           python app.py
