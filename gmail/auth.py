@@ -1,7 +1,9 @@
 import os
+
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
 
 
 class GmailAuth:
@@ -17,7 +19,6 @@ class GmailAuth:
         credentials_file="credentials.json",
         token_file="token.json"
     ):
-
         self.credentials_file = credentials_file
         self.token_file = token_file
 
@@ -25,9 +26,9 @@ class GmailAuth:
 
         creds = None
 
-        # --------------------------------------------------
-        # 1. Try to load existing OAuth token
-        # --------------------------------------------------
+        # -----------------------------------------------
+        # 1. Load existing token
+        # -----------------------------------------------
 
         if os.path.exists(self.token_file):
 
@@ -38,9 +39,9 @@ class GmailAuth:
                 self.SCOPES
             )
 
-        # --------------------------------------------------
+        # -----------------------------------------------
         # 2. Refresh expired token
-        # --------------------------------------------------
+        # -----------------------------------------------
 
         if creds and creds.expired and creds.refresh_token:
 
@@ -63,29 +64,22 @@ class GmailAuth:
 
                 creds = None
 
-        # --------------------------------------------------
-        # 3. If no valid token exists
-        # --------------------------------------------------
+        # -----------------------------------------------
+        # 3. No valid credentials
+        # -----------------------------------------------
 
         if not creds or not creds.valid:
 
-            # ----------------------------------------------
-            # GitHub Actions cannot perform browser login
-            # ----------------------------------------------
-
+            # GitHub Actions cannot open browser
             if os.getenv("GITHUB_ACTIONS") == "true":
 
                 raise RuntimeError(
                     "No valid Google OAuth token is available "
                     "in GitHub Actions. Please update the "
-                    "GOOGLE_TOKEN_JSON GitHub secret with a "
-                    "valid token.json."
+                    "GOOGLE_TOKEN_JSON GitHub secret."
                 )
 
-            # ----------------------------------------------
-            # Local development
-            # ----------------------------------------------
-
+            # Local authentication
             print(
                 "No valid Google OAuth token found."
             )
@@ -103,9 +97,9 @@ class GmailAuth:
                 port=0
             )
 
-        # --------------------------------------------------
-        # 4. Save token locally
-        # --------------------------------------------------
+        # -----------------------------------------------
+        # 4. Save token
+        # -----------------------------------------------
 
         with open(
             self.token_file,
@@ -120,4 +114,18 @@ class GmailAuth:
             "Google authentication successful."
         )
 
-        return creds
+        # -----------------------------------------------
+        # 5. Create Gmail API service
+        # -----------------------------------------------
+
+        gmail_service = build(
+            "gmail",
+            "v1",
+            credentials=creds
+        )
+
+        # -----------------------------------------------
+        # 6. Return BOTH
+        # -----------------------------------------------
+
+        return gmail_service, creds
